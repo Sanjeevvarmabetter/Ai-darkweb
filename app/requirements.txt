@@ -1,0 +1,9 @@
+langchain
+langchain-openai
+langchain-classic
+langchain-community
+requests
+pysocks
+beautifulsoup4
+python-dotenv
+streamlit
