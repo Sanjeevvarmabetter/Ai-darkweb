@@ -20,19 +20,19 @@ load_dotenv()
 
 
 def create_agent():
-    # llm = ChatOpenAI(
-    #     openai_api_key=os.getenv("OPENROUTER_API_KEY"),
-    #     openai_api_base ="https://openrouter.ai/api/v1",
-    #     model_name = os.getenv("OPENROUTER_MODEL"),
-    #     max_tokens=2048,
-    #     temperature=0.2
-    # )
-
-
-    llm = ChatOllama(
-        model="qwen3.5",
+    llm = ChatOpenAI(
+        openai_api_key=os.getenv("OPENROUTER_API_KEY"),
+        openai_api_base ="https://openrouter.ai/api/v1",
+        model_name = os.getenv("OPENROUTER_MODEL"),
+        max_tokens=2048,
         temperature=0.2
     )
+
+
+    # llm = ChatOllama(
+    #     model="qwen3.5",
+    #     temperature=0.2
+    # )
 
     # defining thr tools avaliable for the agent
 
