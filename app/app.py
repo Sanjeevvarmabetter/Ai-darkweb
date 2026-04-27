@@ -71,24 +71,26 @@ if prompt := st.chat_input("E.g., Find public directories tracking ransomware on
         # The StreamlitCallbackHandler visually tracks the agent's tool usage
         st_callback = StreamlitCallbackHandler(st.container(), expand_new_thoughts=True)
         
-        try:
+    try:
             # Initialize agent (doing this here ensures fresh execution state)
             agent_executor = create_agent()
             
             # Run the agent, passing the Streamlit callback
-            response = agent_executor.invoke(
-                {"input": prompt},
+            # FIX 1: Change "input" to "query"
+            final_state = agent_executor.invoke(
+                {"query": prompt}, 
                 {"callbacks": [st_callback]}
             )
             
             # Display final output
-            final_report = response["output"]
+            # FIX 2: Change "output" to "final_report"
+            final_report = final_state["final_report"]
             st.write(final_report)
             
             # Save to history
             st.session_state.messages.append({"role": "assistant", "content": final_report})
             
-        except Exception as e:
+    except Exception as e:
             error_msg = f"**Execution Error:** `{str(e)}`\n\n*Check if your Tor service is running and your API key is valid.*"
             st.error(error_msg)
             st.session_state.messages.append({"role": "assistant", "content": error_msg})
