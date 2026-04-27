@@ -50,10 +50,16 @@ def architect_node(state: OSINTState):
 
     chain = prompt | llm 
     response = chain.invoke({"query": state["query"]})    
-    search_terms = [term.strip() for term in response.content.split(",") if term.strip()]
+    content = response.content
+    
+    # NEW: Detect if the LLM spit out a safety refusal instead of search terms
+    if "can't help" in content.lower() or "harmful" in content.lower() or "institutional channels" in content.lower():
+        print("[!] Warning: LLM refused the prompt due to safety guardrails.")
+        return {"plan": "Safety Refusal", "search_queries": []}
 
-    return {"plan": f"Searching for: {response.content}", "search_queries": search_terms}
+    search_terms = [term.strip() for term in content.split(",") if term.strip()]
 
+    return {"plan": f"Searching for: {content}", "search_queries": search_terms}
 
 def recon_node(state: OSINTState):
     """The recon agent executes the searches to find .onion URLs """

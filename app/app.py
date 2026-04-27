@@ -67,30 +67,33 @@ if prompt := st.chat_input("E.g., Find public directories tracking ransomware on
     st.chat_message("user").write(prompt)
 
     # 2. Execute Agent with UI Callbacks
+    # 2. Execute Agent
     with st.chat_message("assistant"):
-        # The StreamlitCallbackHandler visually tracks the agent's tool usage
-        st_callback = StreamlitCallbackHandler(st.container(), expand_new_thoughts=True)
-        
-    try:
-            # Initialize agent (doing this here ensures fresh execution state)
-            agent_executor = create_agent()
-            
-            # Run the agent, passing the Streamlit callback
-            # FIX 1: Change "input" to "query"
-            final_state = agent_executor.invoke(
-                {"query": prompt}, 
-                {"callbacks": [st_callback]}
-            )
-            
-            # Display final output
-            # FIX 2: Change "output" to "final_report"
-            final_report = final_state["final_report"]
-            st.write(final_report)
-            
-            # Save to history
-            st.session_state.messages.append({"role": "assistant", "content": final_report})
-            
-    except Exception as e:
-            error_msg = f"**Execution Error:** `{str(e)}`\n\n*Check if your Tor service is running and your API key is valid.*"
-            st.error(error_msg)
-            st.session_state.messages.append({"role": "assistant", "content": error_msg})
+        # Use st.status instead of StreamlitCallbackHandler for LangGraph
+        with st.status("🕵️ Agent routing through Tor and executing workflow...", expanded=True) as status:
+            try:
+                # Initialize agent
+                agent_executor = create_agent()
+                
+                # Run the LangGraph application (Notice we removed the callback dict here!)
+                final_state = agent_executor.invoke({"query": prompt})
+                
+                # If the Architect detected a refusal, let the user know cleanly
+                if final_state.get("plan") == "Safety Refusal":
+                    final_report = "The AI model refused to process this query due to safety guardrails. Please try a different phrasing."
+                    status.update(label="Blocked by Safety Filters", state="error", expanded=False)
+                else:
+                    final_report = final_state["final_report"]
+                    status.update(label="Investigation Complete!", state="complete", expanded=False)
+                
+                # Display final output outside the status box
+                st.write(final_report)
+                
+                # Save to history
+                st.session_state.messages.append({"role": "assistant", "content": final_report})
+                
+            except Exception as e:
+                status.update(label="Execution Failed", state="error", expanded=False)
+                error_msg = f"**Execution Error:** `{str(e)}`"
+                st.error(error_msg)
+                st.session_state.messages.append({"role": "assistant", "content": error_msg})
